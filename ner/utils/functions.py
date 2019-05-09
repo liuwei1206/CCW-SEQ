@@ -17,6 +17,108 @@ def normalize_word(word):
     return new_word
 
 
+def read_instance_char(input_file, char_alphabet, bichar_alphabet, label_alphabet, number_normalized, max_sent_length):
+    """
+    read instance with, character, bichar, label, no gaz
+    Args:
+        input_file: the input file path
+        char_alphabet: character
+        bichar_alphabet: bichar
+        label_alphabet: labels
+        number_normalized:
+        max_sent_length:
+    """
+    with open(input_file, 'r', encoding='utf-8') as f:
+        in_lines = f.readlines()
+        instence_texts = []
+        instence_Ids = []
+        chars = []
+        bichars = []
+        labels = []
+        char_Ids = []
+        bichar_Ids = []
+        label_Ids = []
+        for idx in range(len(in_lines)):
+            line = in_lines[idx]
+            if len(line) > 2:
+                pairs = line.strip().split()
+                char = pairs[0]
+                if number_normalized:
+                    char = normalize_word(char)
+                label = pairs[-1]
+
+                if idx < len(in_lines) - 1 and len(in_lines[idx+1]) > 2:
+                    bichar = char + in_lines[idx+1].strip().split()[0]
+                else:
+                    bichar = char + NULLKEY
+
+                chars.append(char)
+                bichars.append(bichar)
+                labels.append(label)
+                char_Ids.append(char_alphabet.get_index(char))
+                bichar_Ids.append(bichar_alphabet.get_index(bichar))
+                label_Ids.append(label_alphabet.get_index(label))
+
+            else:
+                # black line
+                if (max_sent_length < 0) or (len(chars) < max_sent_length):
+                    instence_texts.append([chars, bichars, labels])
+                    instence_Ids.append([char_Ids, bichar_Ids, label_Ids])
+
+                chars = []
+                bichars = []
+                labels = []
+                char_Ids = []
+                bichar_Ids = []
+                label_Ids = []
+        return instence_texts, instence_Ids
+
+def read_instance_word(input_file, word_alphabet, label_alphabet, number_normalized, max_sent_length):
+    """
+    read instance with: word, label, no char, no gaz
+    Args:
+        input_file:
+        word_alphabet:
+        label_alphabet:
+        number_normalized:
+        max_sent_length:
+    """
+    with open(input_file, 'r', encoding='utf-8') as f:
+        in_lines = f.readlines()
+        instence_texts = []
+        instence_Ids = []
+        words = []
+        labels = []
+        word_Ids = []
+        label_Ids = []
+        for line in in_lines:
+            if len(line) > 2:
+                pairs = line.strip().split()
+                word = pairs[0]
+                if number_normalized:
+                    word = normalize_word(word)
+                label = pairs[-1]
+
+                word_Id = word_alphabet.get_index(word)
+                label_Id = label_alphabet.get_index(label)
+
+                words.append(word)
+                labels.append(label)
+                word_Ids.append(word_Id)
+                label_Ids.append(label_Id)
+
+            else:
+                if max_sent_length < 0 or (len(words) < max_sent_length):
+                    instence_texts.append([words, labels])
+                    instence_Ids.append([word_Ids, label_Ids])
+
+                words = []
+                labels = []
+                word_Ids = []
+                label_Ids = []
+
+        return instence_texts, instence_Ids
+
 
 def read_instance_with_gaz_no_char(input_file, gaz, word_alphabet, biword_alphabet, gaz_alphabet, label_alphabet, number_normalized, max_sent_length, unknow_index=None):
     """
