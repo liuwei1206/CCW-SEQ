@@ -119,6 +119,32 @@ def read_instance_word(input_file, word_alphabet, label_alphabet, number_normali
 
         return instence_texts, instence_Ids
 
+def read_char_file(input_file):
+    """
+    read char file, to get string of character and label
+    :param input_file:
+    :return:
+    """
+    chars = []
+    labels = []
+    with open(input_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        now_chars = []
+        now_labels = []
+        for line in lines:
+            if len(line.strip()) < 1:
+                chars.append(now_chars)
+                labels.append(now_labels)
+
+                now_chars = []
+                now_labels = []
+            else:
+                items = line.strip().split()
+
+                now_chars.append(items[0])
+                now_labels.append(items[1])
+
+    return [chars, labels]
 
 def read_instance_with_gaz_no_char(input_file, gaz, word_alphabet, biword_alphabet, gaz_alphabet, label_alphabet, number_normalized, max_sent_length, unknow_index=None):
     """

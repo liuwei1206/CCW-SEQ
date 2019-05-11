@@ -51,6 +51,11 @@ class Data:
         self.test_texts = []
         self.raw_texts = []
 
+        ## for evaluate word ner labels
+        self.train_char_labels = []
+        self.dev_char_labels = []
+        self.test_char_labels = []
+
         self.train_Ids = []
         self.dev_Ids = []
         self.test_Ids = []
@@ -243,7 +248,13 @@ class Data:
                                                                                        self.biword_emb_dim,
                                                                                        self.norm_biword_emb)
 
-    def build_word_pretrain_emb(self, emb_path):
+    def build_small_word_pretrain_emb(self, emb_path):
+        print("build small word pretrain emb...")
+        self.pretrain_word_embedding, self.word_emb_dim = build_pretrain_embedding(emb_path, self.word_alphabet,
+                                                                                   self.word_emb_dim,
+                                                                                   self.norm_word_emb)
+
+    def build_word_pretrain_emb(self, emb_path=None):
         print("build word pretrain emb...")
         self.pretrain_word_embedding, self.word_emb_dim = build_pretrain_embedding_for_gaz(self.word_alphabet,
                                                                                          embedding_dir='data/small_embeddings',
@@ -268,7 +279,7 @@ class Data:
             self.dev_texts, self.dev_Ids = read_instance_char(input_file, self.char_alphabet,
                                                                   self.biword_alphabet, self.label_alphabet,
                                                                   self.number_normalized, self.MAX_SENTENCE_LENGTH)
-        elif name == "text":
+        elif name == "test":
             self.test_texts, self.test_Ids = read_instance_char(input_file, self.char_alphabet,
                                                                   self.biword_alphabet, self.label_alphabet,
                                                                   self.number_normalized, self.MAX_SENTENCE_LENGTH)
@@ -281,19 +292,19 @@ class Data:
         self.fix_alphabet()
 
         if name == "train":
-            self.train_texts, self.train_Ids = read_instance_word(input_file, self.word_alphabetm,
+            self.train_texts, self.train_Ids = read_instance_word(input_file, self.word_alphabet,
                                                                   self.label_alphabet, self.number_normalized,
                                                                   self.MAX_SENTENCE_LENGTH)
         elif name == "dev":
-            self.dev_texts, self.dev_Ids = read_instance_word(input_file, self.word_alphabetm,
+            self.dev_texts, self.dev_Ids = read_instance_word(input_file, self.word_alphabet,
                                                                   self.label_alphabet, self.number_normalized,
                                                                   self.MAX_SENTENCE_LENGTH)
-        elif name == "text":
-            self.test_texts, self.test_Ids = read_instance_word(input_file, self.word_alphabetm,
+        elif name == "test":
+            self.test_texts, self.test_Ids = read_instance_word(input_file, self.word_alphabet,
                                                                   self.label_alphabet, self.number_normalized,
                                                                   self.MAX_SENTENCE_LENGTH)
         elif name == "raw":
-            self.raw_texts, self.raw_Ids = read_instance_word(input_file, self.word_alphabetm,
+            self.raw_texts, self.raw_Ids = read_instance_word(input_file, self.word_alphabet,
                                                                   self.label_alphabet, self.number_normalized,
                                                                   self.MAX_SENTENCE_LENGTH)
 
@@ -360,5 +371,21 @@ class Data:
             fout.write('\n')
         fout.close()
         print("Predict %s result has been written into file. %s" % (name, output_file))
+
+
+    def get_char_label(self, char_file, name):
+        """
+        get char file to evaluate the result of word-based NER model
+        Args:
+            char_file:
+            name:
+        """
+        if name == 'dev':
+            self.dev_char_labels = read_char_file(char_file)
+        elif name == 'test':
+            self.test_char_labels = read_char_file(char_file)
+        elif name == 'train':
+            self.train_char_labels = read_char_file(char_file)
+
 
 
