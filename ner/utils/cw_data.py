@@ -137,7 +137,7 @@ class Data:
     def refresh_label_alphabet(self, input_file):
         old_size = self.label_alphabet_size
         self.label_alphabet.clear(True)
-        in_lines = open(input_file, 'r').readlines()
+        in_lines = open(input_file, 'r', encoding='utf-8').readlines()
         for line in in_lines:
             if len(line) > 2:
                 pairs = line.strip().split()
@@ -348,7 +348,7 @@ class Data:
             print("Error: you can only generate train/dev/test instance! Illegal input:%s" % (name))
 
     def write_decoded_results(self, output_file, predict_results, name):
-        fout = open(output_file, 'w')
+        fout = open(output_file, 'w', encoding='utf-8')
         sent_num = len(predict_results)
         content_list = []
         if name == 'raw':
