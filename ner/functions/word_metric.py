@@ -15,9 +15,7 @@ def get_auto_word_ner_measure(golden_lists, word_tags, predict_lists):
     words, pred_labels = predict_lists
 
     sent_num = len(chars)
-    print(sent_num, len(words))
     assert sent_num == len(words)
-    print(sent_num, len(pred_labels))
     assert sent_num == len(pred_labels)
 
     # for p, r, f1

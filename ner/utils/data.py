@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Author: Jie
+# @Author: Wei Liu
 # @Date:   2017-06-14 17:34:32
 # @Last Modified by:   Jie Yang,     Contact: jieynlp@gmail.com
 # @Last Modified time: 2018-01-29 15:26:51
@@ -81,6 +81,8 @@ class Data:
         self.HP_clip = 5.0
         self.HP_momentum = 0
 
+        self.unknow_index = {}
+
         
     def show_data_summary(self):
         print("DATA SUMMARY START:")
@@ -128,7 +130,7 @@ class Data:
     def refresh_label_alphabet(self, input_file):
         old_size = self.label_alphabet_size
         self.label_alphabet.clear(True)
-        in_lines = open(input_file,'r', encoding='utf-8').readlines()
+        in_lines = open(input_file,'r').readlines()
         for line in in_lines:
             if len(line) > 2:
                 pairs = line.strip().split()
@@ -153,7 +155,7 @@ class Data:
 
 
     def build_alphabet(self, input_file):
-        in_lines = open(input_file, 'r', encoding='utf-8').readlines()
+        in_lines = open(input_file, 'r').readlines()
         for idx in range(len(in_lines)):
             line = in_lines[idx]
             if len(line) > 2:
@@ -193,7 +195,7 @@ class Data:
         ## build gaz file,initial read gaz embedding file
         ## we only get the word, do not read embedding this step
         if gaz_file:
-            fins = open(gaz_file, 'r', encoding='utf-8').readlines()
+            fins = open(gaz_file, 'r').readlines()
             for fin in fins:
                 fin = fin.strip().split()[0]
                 if fin:
@@ -207,7 +209,7 @@ class Data:
         """
         based on the train, dev, test file, we only save the seb-sequence word that my be appear
         """
-        in_lines = open(input_file,'r', encoding='utf-8').readlines()
+        in_lines = open(input_file,'r').readlines()
         word_list = []
         for line in in_lines:
             if len(line) > 3:
@@ -225,6 +227,26 @@ class Data:
                         self.gaz_alphabet.add(entity)
                 word_list = []
         print("gaz alphabet size:", self.gaz_alphabet.size())
+
+    def add_segs(self, file='data/seg_vocab.txt'):
+        """
+        we add the seg to gaz after generate the gaz_alphabet, since seg word has no corresponding embedding
+        """
+        # a 'unknow' word for word not in embeddings
+        self.gaz_alphabet.add('unknow')
+        self.unknow_index['unknow'] = self.gaz_alphabet.next_index - 1
+        for i in range(1, 9):
+            self.gaz_alphabet.add('unknow' + str(i))
+            self.unknow_index['unknow' + str(i)] = self.gaz_alphabet.next_index - 1
+
+        ## add seg to word tree
+        with open(file, 'r', encoding='utf-8') as f:
+            words = f.readlines()
+            for word in words:
+                word = word.strip()
+                if word:
+                    self.gaz.insert(word, 'one_source')
+        print('total gaz size after adding seg: ', self.gaz.size())
 
 
     def fix_alphabet(self):
@@ -312,19 +334,19 @@ class Data:
         """
         self.fix_alphabet()
         if name == "train":
-            self.train_texts, self.train_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH)
+            self.train_texts, self.train_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH, self.unknow_index)
         elif name == "dev":
-            self.dev_texts, self.dev_Ids = read_instance_with_gaz_no_char(input_file, self.gaz,self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH)
+            self.dev_texts, self.dev_Ids = read_instance_with_gaz_no_char(input_file, self.gaz,self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH, self.unknow_index)
         elif name == "test":
-            self.test_texts, self.test_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH)
+            self.test_texts, self.test_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet, self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH, self.unknow_index)
         elif name == "raw":
-            self.raw_texts, self.raw_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet,self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH)
+            self.raw_texts, self.raw_Ids = read_instance_with_gaz_no_char(input_file, self.gaz, self.word_alphabet,self.biword_alphabet, self.gaz_alphabet,  self.label_alphabet, self.number_normalized, self.MAX_SENTENCE_LENGTH, self.unknow_index)
         else:
             print("Error: you can only generate train/dev/test instance! Illegal input:%s"%(name))
 
 
     def write_decoded_results(self, output_file, predict_results, name):
-        fout = open(output_file,'w', encoding='utf-8')
+        fout = open(output_file,'w')
         sent_num = len(predict_results)
         content_list = []
         if name == 'raw':
@@ -347,4 +369,5 @@ class Data:
             fout.write('\n')
         fout.close()
         print("Predict %s result has been written into file. %s"%(name, output_file))
+
 
